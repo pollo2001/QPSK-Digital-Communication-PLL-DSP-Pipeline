@@ -1,141 +1,92 @@
 # 📡 QPSK Digital Communication & PLL DSP Pipeline
 
-This script explains each part of the MATLAB QPSK + PLL pipeline.
-All sections are documented with Markdown-style comments and emojis for easy understanding.
+This MATLAB project explains and implements a complete QPSK (Quadrature Phase-Shift Keying) communication pipeline, with a special focus on carrier synchronization using a band-edge Phase-Locked Loop (PLL).
 
 The project demonstrates:
-- Symbol shaping & ISI mitigation
-- Hilbert/analytic signal processing
-- Band-edge PLL phase tracking
-- Eye diagrams & constellation visualization
-"""
+* Symbol shaping & Inter-Symbol Interference (ISI) mitigation
+* Hilbert transforms for analytic (complex) signal processing
+* Band-edge PLL design for phase tracking and error correction
+* Diagnostic visualization with eye diagrams & constellations
 
-# %% === 1️⃣ Transmit & Receive Filters ===
-"""
-### Transmit & Receive Filters
+---
 
-- 🎯 Purpose: Shape transmitted symbols to reduce inter-symbol interference (ISI) and maximize SNR.
-- 🔧 Code Choices:
-    - `sqrtNyquistFilter` for pulse shaping.
-    - Matched filter at receiver (`rxMatchedFilter`) to maximize detection performance.
-    - FFT plots for frequency verification.
+## 🔬 Pipeline Component Breakdown
 
-**DSP Concepts:** Nyquist ISI, matched filtering, frequency-domain analysis.
-"""
+### 1️⃣ Transmit & Receive Filters
+* **🎯 Purpose:** Shape transmitted symbols to reduce ISI and use a matched filter at the receiver to maximize Signal-to-Noise Ratio (SNR).
+* **🔧 Code Choices:** `sqrtNyquistFilter` for pulse shaping, `rxMatchedFilter` for matched filtering.
+* **DSP Concepts:** Nyquist ISI criterion, matched filtering, pulse shaping.
 
-# %% === 2️⃣ Band-Edge Matched Filter ===
-"""
-### Band-Edge Matched Filter
+### 2️⃣ Band-Edge Matched Filter
+* **🎯 Purpose:** Emphasize the signal spectrum's edges, generating an error signal for the PLL phase detector.
+* **🔧 Code Choices:** Kaiser window to reduce spectral leakage; multiplying by time indices to highlight edge frequencies.
+* **DSP Concepts:** Band-edge detection, windowing, spectral shaping, phase error detection.
 
-- 🎯 Purpose: Emphasizes signal spectrum edges for PLL phase error detection.
-- 🔧 Code Choices:
-    - Kaiser window reduces spectral leakage.
-    - Multiplying by time indices highlights edge frequencies.
+### 3️⃣ Hilbert Transformer
+* **🎯 Purpose:** Convert the real passband signal into its complex analytic form (I/Q components).
+* **🔧 Code Choices:** Discrete Hilbert filter coefficients, smoothed with a Kaiser window.
+* **DSP Concepts:** Analytic signals, complex baseband representation, quadrature signals.
 
-**DSP Concepts:** Band-edge detection, windowing, spectral shaping.
-"""
+### 4️⃣ Analytic Signal & Positive-Frequency Filter
+* **🎯 Purpose:** Isolate the positive frequency components of the analytic signal for PLL processing.
+* **🔧 Code Choices:** Convolve the analytic signal with the band-edge filter.
+* **DSP Concepts:** Complex filtering, positive frequency isolation.
 
-# %% === 3️⃣ Hilbert Transformer ===
-"""
-### Hilbert Transformer
+### 5️⃣ Negative-Frequency Filter
+* **🎯 Purpose:** Create the conjugate of the positive-frequency filter, required for calculating the phase error.
+* **🔧 Code Choices:** Helps compute the power difference that drives the PLL.
+* **DSP Concepts:** Conjugate signals, negative-frequency tracking.
 
-- 🎯 Purpose: Convert real signals into analytic (complex) form (I/Q components).
-- 🔧 Code Choices:
-    - Discrete Hilbert filter coefficients.
-    - Kaiser window smooths frequency response.
+### 6️⃣ Shaping Filter Output & Eye Diagram
+* **🎯 Purpose:** Simulate the transmitted QPSK symbols and visualize signal integrity before the channel.
+* **🔧 Code Choices:** Upsample data symbols and pass through the shaping filter.
+* **DSP Concepts:** Symbol shaping, eye diagrams, constellation analysis, ISI visualization.
+[Image of a clear QPSK eye diagram]
 
-**DSP Concepts:** Analytic signals, complex baseband representation.
-"""
+### 7️⃣ Received Signal with Phase Offset
+* **🎯 Purpose:** Simulate a real-world carrier frequency offset (CFO) to test the PLL.
+* **🔧 Code Choices:** Multiply the transmitted signal by a complex exponential to rotate its phase.
+* **DSP Concepts:** Carrier phase error, phase rotation, channel modeling.
 
-# %% === 4️⃣ Analytic Signal & Positive Frequency Filter ===
-"""
-### Analytic Signal & Positive-Frequency Filter
+### 8️⃣ PLL Loop Filter & Phase Tracking
+* **🎯 Purpose:** Recover the carrier phase and correct the received symbols in real-time.
+* **🔧 Code Choices:** Digital PLL using band-edge filters to generate a phase error signal, which feeds a PI (Proportional-Integrator) loop filter. A phase accumulator applies the correction.
+* **DSP Concepts:** Phase-Locked Loop (PLL) design, loop filter, phase tracking, carrier synchronization.
 
-- 🎯 Purpose: Isolate positive frequency components for PLL processing.
-- 🔧 Code Choices:
-    - Convolve analytic signal with band-edge filter.
-    - Ensures accurate phase error computation.
+### 9️⃣ Post-PLL Output Constellation & Eye Diagram
+* **🎯 Purpose:** Visually verify the PLL's performance and confirm phase lock and symbol recovery.
+* **🔧 Code Choices:** Plot the constellation and eye diagram of the *corrected* signal.
+* **DSP Concepts:** Phase-compensated recovery, constellation analysis.
+[Image of a clean QPSK constellation plot]
 
-**DSP Concepts:** Complex filtering, positive frequency isolation.
-"""
+### 🔟 Attenuated PLL Loop Test
+* **🎯 Purpose:** Test the PLL's robustness and sensitivity under weaker signal (low SNR) conditions.
+* **🔧 Code Choices:** Scale down the band-edge power difference signal before it enters the loop filter.
+* **DSP Concepts:** Loop sensitivity, robustness, lock range, low-signal behavior.
 
-# %% === 5️⃣ Negative-Frequency Filter ===
-"""
-### Negative-Frequency Filter
+---
 
-- 🎯 Purpose: Conjugate of positive-frequency filter for phase error calculations.
-- 🔧 Code Choices:
-    - Helps compute power difference in PLL.
+## 📝 Key Concepts & Notes
+* Shift registers are used to maintain a history of samples for FIR filtering and PLL computations.
+* Convolutions are the core operation for implementing all FIR filters.
+* FFT visualizations are used throughout to verify the magnitude and frequency response of filters.
+* Eye diagrams and constellations are the two primary diagnostic tools for any digital communication system.
 
-**DSP Concepts:** Conjugate signals, negative-frequency tracking.
-"""
+---
 
-# %% === 6️⃣ Shaping Filter Output & Eye Diagram ===
-"""
-### Shaping Filter Output & Eye Diagram
+## 🚀 Getting Started
 
-- 🎯 Purpose: Simulate transmitted QPSK symbols; visualize signal integrity.
-- 🔧 Code Choices:
-    - Upsample data symbols.
-    - Eye diagrams check ISI; constellations check symbol mapping.
+### Prerequisites
+* MATLAB (e.g., R2024a or newer)
+* MATLAB DSP Toolbox
 
-**DSP Concepts:** Symbol shaping, eye diagrams, constellation analysis.
-"""
+### Usage
+1.  Open the project in MATLAB.
+2.  Run the main script (e.g., `qpsk_pll_pipeline.m`).
+3.  Observe the generated figures, paying close attention to the pre- and post-PLL constellations.
 
-# %% === 7️⃣ Received Signal with Phase Offset ===
-"""
-### Received Signal with Phase Offset
+---
 
-- 🎯 Purpose: Simulate real-world carrier frequency offset.
-- 🔧 Code Choices:
-    - Multiply transmitted signal by complex exponential to rotate phase.
-    - Test PLL’s ability to correct phase.
+## 📄 License
 
-**DSP Concepts:** Carrier phase error, phase rotation effects.
-"""
-
-# %% === 8️⃣ PLL Loop Filter & Phase Tracking ===
-"""
-### PLL Loop Filter & Phase Tracking
-
-- 🎯 Purpose: Recover carrier phase and correct received symbols.
-- 🔧 Code Choices:
-    - Digital PLL with leaky integrator + PI loop filter.
-    - Band-edge filters generate phase error input.
-    - Phase accumulator adjusts the received signal.
-
-**DSP Concepts:** PLL design, loop filter, phase tracking, synchronization.
-"""
-
-# %% === 9️⃣ Post-PLL Output Constellation & Eye Diagram ===
-"""
-### Post-PLL Output Constellation & Eye Diagram
-
-- 🎯 Purpose: Verify phase recovery after PLL.
-- 🔧 Code Choices:
-    - Constellation and eye diagram visualization.
-    - Confirms correct symbol recovery.
-
-**DSP Concepts:** Phase-compensated recovery, eye diagram analysis.
-"""
-
-# %% === 🔟 Attenuated PLL Loop Test ===
-"""
-### Attenuated PLL Loop Test
-
-- 🎯 Purpose: Test PLL under weaker signal conditions.
-- 🔧 Code Choices:
-    - Scale band-edge power difference.
-    - Observe PLL sensitivity and stability.
-
-**DSP Concepts:** Loop sensitivity, robustness, low-signal behavior.
-"""
-
-# %% === Notes 📝
-"""
-- Shift registers maintain history of samples for filtering and PLL computations.
-- Convolutions implement FIR filters.
-- FFT visualizations verify magnitude and frequency response.
-- Eye diagrams & constellations are core diagnostics for QPSK communication.
-
-This walkthrough can serve as a guide for anyone reading the original MATLAB `.m` file.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
