@@ -82,7 +82,7 @@ The project demonstrates:
 
 ### Usage
 1.  Open the project in MATLAB.
-2.  Run the main script (e.g., `qpsk_pll_pipeline.m`).
+2.  Run the main script (e.g., `ppp.m`).
 3.  Observe the generated figures, paying close attention to the pre- and post-PLL constellations.
 
 ---
